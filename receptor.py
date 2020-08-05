@@ -10,6 +10,7 @@ import socket
 import pickle
 import binascii
 from bitarray import bitarray
+import hamming_code as hc
 
 HOST = "127.0.0.1"
 PORT = 9090
@@ -38,6 +39,7 @@ def capa_decodificacion(current_connection, header):
 
 def listen():
     bandera = True
+    hammin_flag = True
     while bandera:
         current_connection, address = connection.accept()
         while True:
@@ -47,17 +49,28 @@ def listen():
                 # --------------------------------------------
 
                 msgtrans = capa_decodificacion(current_connection, data)
+                msgdecode = capa_verificacion(msgtrans['data']['message'])
+
+                #------------ CAPA DE APLICACION ------------
                 print("\n-------------> cantidad de bits transferidos: ", msgtrans['data']['bits'])
                 print("mensaje tipo: ", msgtrans['data']['type'])
-                msgdecode = capa_verificacion(msgtrans['data']['message'])
                 print("se recibe: ", msgdecode)
                 print("-----------------------------------------------")
 
-                #------------ CAPA DE APLICACION ------------
-                #print(msgdecode)
+                if(hammin_flag):
+                    if msgtrans['data']['type'] == 'mensaje_sin_ruido':
+                        r = hc.calcRedundantBits(len(msgtrans['data']['message'].to01()))
+                        msg = msgtrans['data']['message'].to01()
+
+                    if msgtrans['data']['type'] == 'mensaje_con_ruido':
+                        correction = hc.detectError(msgtrans['data']['message'].to01(), r)
+                        print("array de bits con hamming sin error: ", msg)
+                        print("array de bits con hamming con error: ", msgtrans['data']['message'].to01())
+                        print("La posicion del error es " + str(correction))
 
 #\r\n
                 if msgdecode.decode() == 'salir':
+                    print("hasta pronto")
                     current_connection.shutdown(1)
                     current_connection.close()
                     bandera = False
