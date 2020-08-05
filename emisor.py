@@ -15,11 +15,11 @@ HEADER_LENGTH = 10
 HOST = "127.0.0.1"  # The server's hostname or IP address
 PORT = 9090  # The port used by the server
 bits_transmitidos = 0
+n = 1
 
-def capa_transmision(sock, msge):
-	global bits_transmitidos
+def capa_transmision_con_ruido(sock, msge):
 	dprotocol = {
-		"type":"mensaje_emisor",
+		"type":"mensaje_con_ruido",
 		"message": msge,
 		"bits": bits_transmitidos
 	}
@@ -31,7 +31,6 @@ def capa_transmision(sock, msge):
 	return True
 
 def capa_transmision_sin_ruido(sock, msge):
-	global bits_transmitidos
 	dprotocol = {
 		"type":"mensaje_sin_ruido",
 		"message": msge,
@@ -46,16 +45,8 @@ def capa_transmision_sin_ruido(sock, msge):
 
 def capa_ruido(msg_encode):
 	#cada 100 bits mandados se le remueve un bit random al mensaje
-	len_msg = msg_encode.length()
-	global bits_transmitidos
-	print("bits transmitidos = ", bits_transmitidos)
-	if bits_transmitidos > 100:
-		bits_transmitidos = 0
-	bits_transmitidos= bits_transmitidos + len_msg
-	if(bits_transmitidos >= 100 and len_msg > 1):
-		msg_encode.pop(random.randint(1,len_msg - 1))
-	else:
-		return msg_encode
+	msg_encode.pop(random.randint(1,msg_encode.length() - 1))
+	return msg_encode
 
 def capa_verificacion(msg):
 	#Convertimos el string (msg) a ASCII binario
@@ -68,13 +59,28 @@ def capa_verificacion(msg):
 	return bit_array
 
 def capa_aplicacion():
+	global bits_transmitidos
 	bandera = True
 	while(bandera):
-		msg = input("¿Qué mensaje desea enviar al receptor? ")
+		menu = True
+		while(menu):
+			msg = input("¿Qué mensaje desea enviar al receptor? ")
+			if msg == "":
+				print("mensaje vacio")
+			else: 
+				menu = False
 		msg_encode = capa_verificacion(msg)
-		trans_free = capa_transmision_sin_ruido(client_socket, msg_encode)
-		msg_encode_noise = capa_ruido(msg_encode)
-		trans = capa_transmision(client_socket, msg_encode_noise)
+		trans = False
+
+		bits_transmitidos += msg_encode.length()
+		if bits_transmitidos > 100:
+			trans_free = capa_transmision_sin_ruido(client_socket, msg_encode)
+			msg_encode_noise = capa_ruido(msg_encode)
+			trans = capa_transmision_con_ruido(client_socket, msg_encode_noise)
+			bits_transmitidos = 0
+		else:
+			trans_free = capa_transmision_sin_ruido(client_socket, msg_encode)
+
 		if(trans or trans_free):
 			print("Mensaje enviado con exito")
 		else:
