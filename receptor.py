@@ -61,11 +61,20 @@ def listen():
                     if msgtrans['data']['type'] == 'mensaje_sin_ruido':
                         r = hc.calcRedundantBits(len(msgtrans['data']['message'].to01()))
                         msg = msgtrans['data']['message'].to01()
+                        # Determine the positions of Redundant Bits 
+                        arr = hc.posRedundantBits(msg, r) 
+                        # Determine the parity bits 
+                        arr = hc.calcParityBits(arr, r)
 
                     if msgtrans['data']['type'] == 'mensaje_con_ruido':
                         correction = hc.detectError(msgtrans['data']['message'].to01(), r)
-                        print("array de bits con hamming sin error: ", msg)
-                        print("array de bits con hamming con error: ", msgtrans['data']['message'].to01())
+                        print("array de bits con hamming sin error: ", arr)
+                        msg2 = msgtrans['data']['message'].to01()
+                        # Determine the positions of Redundant Bits 
+                        arr2 = hc.posRedundantBits(msg2, r) 
+                        # Determine the parity bits 
+                        arr2 = hc.calcParityBits(arr2, r)
+                        print("array de bits con hamming con error: ", arr2)
                         print("La posicion del error es " + str(correction))
 
 #\r\n

@@ -18,12 +18,11 @@ PORT = 9090  # The port used by the server
 bits_transmitidos = 0
 n = 1
 
-def capa_transmision_con_ruido(sock, msge, hamming):
+def capa_transmision_con_ruido(sock, msge):
 	dprotocol = {
 		"type":"mensaje_con_ruido",
 		"message": msge,
-		"bits": bits_transmitidos,
-		"hamming": hamming
+		"bits": bits_transmitidos
 	}
 	# serializing dprotocol
 	msg = pickle.dumps(dprotocol)
@@ -32,12 +31,11 @@ def capa_transmision_con_ruido(sock, msge, hamming):
 	sock.send(msg)
 	return True
 
-def capa_transmision_sin_ruido(sock, msge, hamming):
+def capa_transmision_sin_ruido(sock, msge):
 	dprotocol = {
 		"type":"mensaje_sin_ruido",
 		"message": msge,
-		"bits": bits_transmitidos,
-		"hamming": hamming
+		"bits": bits_transmitidos
 	}
 	# serializing dprotocol
 	msg = pickle.dumps(dprotocol)
@@ -61,17 +59,6 @@ def capa_verificacion(msg):
 	
 	return bit_array
 
-def hamming_code(binarystr):
-	# Calculate the no of Redundant Bits Required 
-	r = hc.calcRedundantBits(len(binarystr))
-	# Determine the positions of Redundant Bits 
-	arr = hc.posRedundantBits(binarystr, r)
-	# Determine the parity bits 
-	arr = hc.calcParityBits(arr, r)
-
-	return arr
-
-
 def capa_aplicacion():
 	global bits_transmitidos
 	bandera = True
@@ -86,20 +73,17 @@ def capa_aplicacion():
 
 		#Aqui tengo el mensaje en bits e.g 101010000100101
 		msg_encode = capa_verificacion(msg)
-		#correcion de errores hamming
-		hamming = hamming_code(msg_encode.to01())
 		#Variable de control
 		trans = False
 
 		bits_transmitidos += msg_encode.length()
 		if bits_transmitidos > 100:
-			trans_free = capa_transmision_sin_ruido(client_socket, msg_encode, hamming)
+			trans_free = capa_transmision_sin_ruido(client_socket, msg_encode)
 			msg_encode_noise = capa_ruido(msg_encode)
-			hamming_noise = hamming_code(msg_encode_noise.to01())
-			trans = capa_transmision_con_ruido(client_socket, msg_encode_noise, hamming_noise)
+			trans = capa_transmision_con_ruido(client_socket, msg_encode_noise)
 			bits_transmitidos = 0
 		else:
-			trans_free = capa_transmision_sin_ruido(client_socket, msg_encode, hamming)
+			trans_free = capa_transmision_sin_ruido(client_socket, msg_encode)
 
 		if(trans or trans_free):
 			print("Mensaje enviado con exito")
