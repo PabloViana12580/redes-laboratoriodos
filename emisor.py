@@ -1,3 +1,11 @@
+"""
+Universidad del Valle de Guatemala
+Redes
+Catedrático: Vinicio Paz
+Pablo Viana - 16091
+Sergio Marchena - 16
+"""
+
 import socket
 import random
 import pickle
@@ -8,10 +16,26 @@ HOST = "127.0.0.1"  # The server's hostname or IP address
 PORT = 9090  # The port used by the server
 bits_transmitidos = 0
 
-def capa_transmision(sock, msg):
+def capa_transmision(sock, msge):
+	global bits_transmitidos
 	dprotocol = {
 		"type":"mensaje_emisor",
-		"message": msg
+		"message": msge,
+		"bits": bits_transmitidos
+	}
+	# serializing dprotocol
+	msg = pickle.dumps(dprotocol)
+	# adding header to msg
+	msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
+	sock.send(msg)
+	return True
+
+def capa_transmision_sin_ruido(sock, msge):
+	global bits_transmitidos
+	dprotocol = {
+		"type":"mensaje_sin_ruido",
+		"message": msge,
+		"bits": bits_transmitidos
 	}
 	# serializing dprotocol
 	msg = pickle.dumps(dprotocol)
@@ -25,8 +49,10 @@ def capa_ruido(msg_encode):
 	len_msg = msg_encode.length()
 	global bits_transmitidos
 	print("bits transmitidos = ", bits_transmitidos)
+	if bits_transmitidos > 100:
+		bits_transmitidos = 0
 	bits_transmitidos= bits_transmitidos + len_msg
-	if(bits_transmitidos >= 100):
+	if(bits_transmitidos >= 100 and len_msg > 1):
 		msg_encode.pop(random.randint(1,len_msg - 1))
 	else:
 		return msg_encode
@@ -46,12 +72,16 @@ def capa_aplicacion():
 	while(bandera):
 		msg = input("¿Qué mensaje desea enviar al receptor? ")
 		msg_encode = capa_verificacion(msg)
+		trans_free = capa_transmision_sin_ruido(client_socket, msg_encode)
 		msg_encode_noise = capa_ruido(msg_encode)
 		trans = capa_transmision(client_socket, msg_encode_noise)
-		if(trans):
+		if(trans or trans_free):
 			print("Mensaje enviado con exito")
 		else:
 			print("Error al enviar el mensaje")
+		if msg == 'salir':
+			print("Hasta pronto")
+			return
 
 if __name__ == "__main__":
 	client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
