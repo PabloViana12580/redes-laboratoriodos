@@ -37,7 +37,8 @@ def capa_decodificacion(current_connection, header):
     return {"header": header, "data": data}
 
 def listen():
-    while True:
+    bandera = True
+    while bandera:
         current_connection, address = connection.accept()
         while True:
             try:
@@ -56,9 +57,11 @@ def listen():
                 #print(msgdecode)
 
 #\r\n
-                if msgdecode == b'salir':
+                if msgdecode.decode() == 'salir':
                     current_connection.shutdown(1)
                     current_connection.close()
+                    bandera = False
+                    break
                     exit()
                 # --------------------------------------------
             except:

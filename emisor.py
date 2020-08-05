@@ -69,6 +69,7 @@ def capa_aplicacion():
 				print("mensaje vacio")
 			else: 
 				menu = False
+
 		msg_encode = capa_verificacion(msg)
 		trans = False
 
