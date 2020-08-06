@@ -11,11 +11,14 @@ import pickle
 import binascii
 from bitarray import bitarray
 import hamming_code as hc
+import time
 
 HOST = "127.0.0.1"
 PORT = 9090
 HEADER_LENGTH = 10
 array_hamming = []
+paritybits_time = []
+detection_times = []
 r = 0
 
 connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -28,6 +31,8 @@ def capa_verificacion(msgtrans):
     """ esta funcion decodifica los bits en caracteres ascii """
     global r
     global array_hamming
+    global paritybits_time
+    global detection_times
     hamming_flag = True
     message_str = msgtrans['data']['message'].to01()
     n = int(message_str, 2)
@@ -35,23 +40,33 @@ def capa_verificacion(msgtrans):
 
     if(hamming_flag):
         if msgtrans['data']['type'] == 'mensaje_sin_ruido':
+            start = time.time()
             r = hc.calcRedundantBits(len(message_str))
             # Determine the positions of Redundant Bits
             arr = hc.posRedundantBits(message_str, r)
             # Determine the parity bits
             arr = hc.calcParityBits(arr, r)
+            end = time.time()
+            paritybits_time.append(end - start)
             array_hamming.append(arr)
 
         elif msgtrans['data']['type'] == 'mensaje_con_ruido':
             print("\nAlgoritmo de correccion de hamming")
+            start_detection = time.time()
             correction = hc.detectError(message_str, r)
+            end_detection = time.time()
+            detection_times.append(end_detection - start_detection)
             print("array de bits con hamming sin error: ", array_hamming.pop())
             # Determine the positions of Redundant Bits
             arr = hc.posRedundantBits(message_str, r)
             # Determine the parity bits
             arr = hc.calcParityBits(arr, r)
+            end = time.time()
+            paritybits_time.append(end-start)
             print("array de bits con hamming con error: ", arr)
             print("La posicion del error es " + str(correction) + "\n")
+            print("tiempo promedio para formar los parity bits: ", (sum(paritybits_time))/len(paritybits_time))
+            print("tiempo promedio para deteccion del error: ", (sum(detection_times))/len(detection_times))
         else:
             print("no reconocido tipo de mensaje")
 
@@ -80,7 +95,7 @@ def listen():
                 msgdecode = capa_verificacion(msgtrans)
                 print("se recibe: ", msgdecode)
                 print("-----------------------------------------------")
-                print("el checksum es " + msgtrans['data']['checksum'])
+                #print("el checksum es " + msgtrans['data']['checksum'])
 
 
 
