@@ -36,8 +36,8 @@ def capa_verificacion(msgtrans):
     if(hamming_flag):
         if msgtrans['data']['type'] == 'mensaje_sin_ruido':
             r = hc.calcRedundantBits(len(message_str))
-            # Determine the positions of Redundant Bits 
-            arr = hc.posRedundantBits(message_str, r) 
+            # Determine the positions of Redundant Bits
+            arr = hc.posRedundantBits(message_str, r)
             # Determine the parity bits
             arr = hc.calcParityBits(arr, r)
             array_hamming.append(arr)
@@ -46,9 +46,9 @@ def capa_verificacion(msgtrans):
             print("\nAlgoritmo de correccion de hamming")
             correction = hc.detectError(message_str, r)
             print("array de bits con hamming sin error: ", array_hamming.pop())
-            # Determine the positions of Redundant Bits 
-            arr = hc.posRedundantBits(message_str, r) 
-            # Determine the parity bits 
+            # Determine the positions of Redundant Bits
+            arr = hc.posRedundantBits(message_str, r)
+            # Determine the parity bits
             arr = hc.calcParityBits(arr, r)
             print("array de bits con hamming con error: ", arr)
             print("La posicion del error es " + str(correction) + "\n")
@@ -80,6 +80,8 @@ def listen():
                 msgdecode = capa_verificacion(msgtrans)
                 print("se recibe: ", msgdecode)
                 print("-----------------------------------------------")
+                print("el checksum es " + msgtrans['data']['checksum'])
+
 
 
 
