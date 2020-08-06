@@ -12,6 +12,7 @@ import binascii
 from bitarray import bitarray
 import hamming_code as hc
 import time
+import matplotlib.pyplot as plt
 
 HOST = "127.0.0.1"
 PORT = 9090
@@ -47,7 +48,7 @@ def capa_verificacion(msgtrans):
             # Determine the parity bits
             arr = hc.calcParityBits(arr, r)
             end = time.time()
-            paritybits_time.append(end - start)
+            #paritybits_time.append(end - start)
             array_hamming.append(arr)
 
         elif msgtrans['data']['type'] == 'mensaje_con_ruido':
@@ -97,11 +98,19 @@ def listen():
                 print("se recibe: ", msgdecode)
                 print("-----------------------------------------------")
                 #print("el checksum es " + msgtrans['data']['checksum'])
-
-
-
-
 #\r\n
+                if msgdecode.decode() == 'graficas':
+                    plt.plot(detection_times, '-')
+                    plt.suptitle('Gráfica deteccion de errores Hamming')
+                    plt.xlabel('Detecciones')
+                    plt.ylabel('tiempo deteccion error')
+                    plt.show()
+
+                    plt.plot(paritybits_time, '-')
+                    plt.suptitle('Gráfica tiempo implementación Hamming')
+                    plt.xlabel('Ocurrencias')
+                    plt.ylabel('tiempo implemetar algoritmo')
+                    plt.show()
                 if msgdecode.decode() == 'salir':
                     print("hasta pronto")
                     current_connection.shutdown(1)
