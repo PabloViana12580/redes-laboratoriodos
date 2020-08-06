@@ -15,6 +15,8 @@ import hamming_code as hc
 HOST = "127.0.0.1"
 PORT = 9090
 HEADER_LENGTH = 10
+array_hamming = []
+r = 0
 
 connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -22,13 +24,37 @@ connection.bind((HOST, PORT))
 connection.listen(10)
 print("Receptor listo para recepción de mensajes")
 
-def capa_verificacion(message):
+def capa_verificacion(msgtrans):
     """ esta funcion decodifica los bits en caracteres ascii """
-    prefix = "0b"
-    msg = message.to01()
-    #total_msg = "".join((prefix, msg))
-    n = int(msg, 2)
+    global r
+    global array_hamming
+    hamming_flag = True
+    message_str = msgtrans['data']['message'].to01()
+    n = int(message_str, 2)
     ascii_string = binascii.unhexlify('%x' % n)
+
+    if(hamming_flag):
+        if msgtrans['data']['type'] == 'mensaje_sin_ruido':
+            r = hc.calcRedundantBits(len(message_str))
+            # Determine the positions of Redundant Bits 
+            arr = hc.posRedundantBits(message_str, r) 
+            # Determine the parity bits
+            arr = hc.calcParityBits(arr, r)
+            array_hamming.append(arr)
+
+        elif msgtrans['data']['type'] == 'mensaje_con_ruido':
+            print("\nAlgoritmo de correccion de hamming")
+            correction = hc.detectError(message_str, r)
+            print("array de bits con hamming sin error: ", array_hamming.pop())
+            # Determine the positions of Redundant Bits 
+            arr = hc.posRedundantBits(message_str, r) 
+            # Determine the parity bits 
+            arr = hc.calcParityBits(arr, r)
+            print("array de bits con hamming con error: ", arr)
+            print("La posicion del error es " + str(correction) + "\n")
+        else:
+            print("no reconocido tipo de mensaje")
+
     return ascii_string
 
 def capa_decodificacion(current_connection, header):
@@ -39,7 +65,6 @@ def capa_decodificacion(current_connection, header):
 
 def listen():
     bandera = True
-    hammin_flag = True
     while bandera:
         current_connection, address = connection.accept()
         while True:
@@ -49,33 +74,14 @@ def listen():
                 # --------------------------------------------
 
                 msgtrans = capa_decodificacion(current_connection, data)
-                msgdecode = capa_verificacion(msgtrans['data']['message'])
-
                 #------------ CAPA DE APLICACION ------------
                 print("\n-------------> cantidad de bits transferidos: ", msgtrans['data']['bits'])
                 print("mensaje tipo: ", msgtrans['data']['type'])
+                msgdecode = capa_verificacion(msgtrans)
                 print("se recibe: ", msgdecode)
                 print("-----------------------------------------------")
 
-                if(hammin_flag):
-                    if msgtrans['data']['type'] == 'mensaje_sin_ruido':
-                        r = hc.calcRedundantBits(len(msgtrans['data']['message'].to01()))
-                        msg = msgtrans['data']['message'].to01()
-                        # Determine the positions of Redundant Bits 
-                        arr = hc.posRedundantBits(msg, r) 
-                        # Determine the parity bits 
-                        arr = hc.calcParityBits(arr, r)
 
-                    if msgtrans['data']['type'] == 'mensaje_con_ruido':
-                        correction = hc.detectError(msgtrans['data']['message'].to01(), r)
-                        print("array de bits con hamming sin error: ", arr)
-                        msg2 = msgtrans['data']['message'].to01()
-                        # Determine the positions of Redundant Bits 
-                        arr2 = hc.posRedundantBits(msg2, r) 
-                        # Determine the parity bits 
-                        arr2 = hc.calcParityBits(arr2, r)
-                        print("array de bits con hamming con error: ", arr2)
-                        print("La posicion del error es " + str(correction))
 
 #\r\n
                 if msgdecode.decode() == 'salir':
