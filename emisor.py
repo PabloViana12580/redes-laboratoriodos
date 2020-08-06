@@ -18,6 +18,7 @@ PORT = 9090  # The port used by the server
 bits_transmitidos = 0
 n = 1
 checksumCalculado = "2"
+PROB_ERROR = 100
 
 def capa_transmision_con_ruido(sock, msge):
 	dprotocol = {
@@ -83,7 +84,7 @@ def capa_aplicacion():
 		trans = False
 
 		bits_transmitidos += msg_encode.length()
-		if bits_transmitidos > 100:
+		if bits_transmitidos > PROB_ERROR:
 			trans_free = capa_transmision_sin_ruido(client_socket, msg_encode)
 			msg_encode_noise = capa_ruido(msg_encode)
 			trans = capa_transmision_con_ruido(client_socket, msg_encode_noise)

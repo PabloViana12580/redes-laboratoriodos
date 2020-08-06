@@ -57,7 +57,8 @@ def capa_verificacion(msgtrans):
             end_detection = time.time()
             detection_times.append(end_detection - start_detection)
             print("array de bits con hamming sin error: ", array_hamming.pop())
-            # Determine the positions of Redundant Bits
+            # Determine the positions of Redundant Bi
+            start = time.time()
             arr = hc.posRedundantBits(message_str, r)
             # Determine the parity bits
             arr = hc.calcParityBits(arr, r)
