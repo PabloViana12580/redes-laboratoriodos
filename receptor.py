@@ -13,6 +13,8 @@ from bitarray import bitarray
 import hamming_code as hc
 import time
 import matplotlib.pyplot as plt
+import numpy as np
+
 
 HOST = "127.0.0.1"
 PORT = 9090
@@ -20,7 +22,9 @@ HEADER_LENGTH = 10
 array_hamming = []
 paritybits_time = []
 detection_times = []
+pos_error = []
 r = 0
+PROB_ERROR = 1000
 
 connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -67,6 +71,7 @@ def capa_verificacion(msgtrans):
             paritybits_time.append(end-start)
             print("array de bits con hamming con error: ", arr)
             print("La posicion del error es " + str(correction) + "\n")
+            pos_error.append(int(correction))
             print("tiempo promedio para formar los parity bits: ", (sum(paritybits_time))/len(paritybits_time))
             print("tiempo promedio para deteccion del error: ", (sum(detection_times))/len(detection_times))
         else:
@@ -103,14 +108,27 @@ def listen():
                     plt.plot(detection_times, '-')
                     plt.suptitle('Gráfica deteccion de errores Hamming')
                     plt.xlabel('Detecciones')
-                    plt.ylabel('tiempo deteccion error')
+                    plt.ylabel('Tiempo deteccion error')
                     plt.show()
 
                     plt.plot(paritybits_time, '-')
                     plt.suptitle('Gráfica tiempo implementación Hamming')
                     plt.xlabel('Ocurrencias')
-                    plt.ylabel('tiempo implemetar algoritmo')
+                    plt.ylabel('Tiempo implemetar algoritmo')
                     plt.show()
+
+                    a = np.array(pos_error)
+                    unique, counts = np.unique(a, return_counts=True)
+                    count_occ = dict(zip(unique, counts))
+                    lists = sorted(count_occ.items())
+                    x, y = zip(*lists)
+                    plt.plot(x,y, 'bs')
+                    plt.suptitle(f'Gráfica posiciones con más errores en 1/{PROB_ERROR}')
+                    plt.xlabel('Posiciones')
+                    plt.ylabel('Ocurrencias')
+                    plt.show()
+
+
                 if msgdecode.decode() == 'salir':
                     print("hasta pronto")
                     current_connection.shutdown(1)

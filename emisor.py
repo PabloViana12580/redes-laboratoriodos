@@ -18,7 +18,7 @@ PORT = 9090  # The port used by the server
 bits_transmitidos = 0
 n = 1
 checksumCalculado = "2"
-PROB_ERROR = 100
+PROB_ERROR = 1000
 
 def capa_transmision_con_ruido(sock, msge):
 	dprotocol = {
