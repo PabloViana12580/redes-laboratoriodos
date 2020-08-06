@@ -10,8 +10,6 @@ section2 = '11100010'
 section3 = '00100100'
 section4 = '10000100'
 
-"""def splitArray(arg):
-    pass"""
 
 def listToString(s):
 
@@ -97,17 +95,16 @@ def otra(*args):
         return respuesta
 
 suma = otra(section1, section2, section3, section4)
-print(suma)
+print("El mensaje es: "+ section1+section2+section3+section4)
+print("Los bloques son: ")
+print(section1)
+print(section2)
+print(section3)
+print(section4)
+print("El checksum es: "+suma)
 complemento = complement(suma)
-print(complemento)
+print("El uno-complemento es: "+complemento)
+checksumTest = binAdd(suma,complemento)
 
-"""print(section1+"+"+section2+"+"+section3+"+"+section4)
-
-suma = sumSection(section1, section2, section3, section4)
-print(suma)"""
-
-"""suma1 = binAdd(section1, section2)
-suma2 = binAdd(section3, section4)
-sumafinal = binAdd(suma1,suma2)
-print(sumafinal)
-print(bin(int(sumafinal)))"""
+print("La suma del checksum y el uno-complemento es: "+checksumTest)
+print("no hay errores detectados")
